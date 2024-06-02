@@ -157,9 +157,9 @@ class ThreeApp {
    * UnrealBloomPass定義のための定数
    */
   static BLOOM_PARAM = {
-    bloomStrength: 1.6,
-    bloomRadius: 1.0,
-    bloomThreshold: 0.0,
+    strength: 1.6,
+    radius: 1.0,
+    threshold: 0.0,
   };
 
   renderer; // レンダラ
@@ -255,17 +255,16 @@ class ThreeApp {
     // コンポーザーに、まず最初に「レンダーパス」を設定する
     this.renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(this.renderPass);
-    // コンポーザーに第３のパスとしてパスを設定する
+    // コンポーザーにパスを設定する
     this.unrealBloomPass = new UnrealBloomPass(
       new THREE.Vector2(
         ThreeApp.RENDERER_PARAM.width,
         ThreeApp.RENDERER_PARAM.height
       ),
-      ThreeApp.BLOOM_PARAM.bloomStrength,
-      ThreeApp.BLOOM_PARAM.bloomRadius,
-      ThreeApp.BLOOM_PARAM.bloomThreshold
+      ThreeApp.BLOOM_PARAM.strength,
+      ThreeApp.BLOOM_PARAM.radius,
+      ThreeApp.BLOOM_PARAM.threshold
     );
-
     this.composer.addPass(this.unrealBloomPass);
     // パスの追加がすべて終わったら画面に描画結果を出すよう指示する
     this.unrealBloomPass.renderToScreen = true;
