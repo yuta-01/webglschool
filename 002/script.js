@@ -279,7 +279,7 @@ class ThreeApp {
       (e) => {
         var mouseX = (e.clientX / window.innerWidth) * 2 - 1;
         var mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-        this.angle = Math.atan2(mouseY, mouseX) + (Math.PI * 90) / 180;
+        this.angle = Math.atan2(mouseY, mouseX);
       },
       false
     );
