@@ -36,7 +36,7 @@ class ThreeApp {
    * レンダラー定義のための定数
    */
   static RENDERER_PARAM = {
-    clearColor: 0xdddddd,
+    clearColor: 0x111111,
     width: window.innerWidth,
     height: window.innerHeight,
   };
@@ -45,7 +45,7 @@ class ThreeApp {
    */
   static DIRECTIONAL_LIGHT_PARAM = {
     color: 0xffffff,
-    intensity: 1.0,
+    intensity: 2.0,
     position: new THREE.Vector3(1.0, 1.0, 1.0),
   };
   /**
@@ -53,7 +53,7 @@ class ThreeApp {
    */
   static AMBIENT_LIGHT_PARAM = {
     color: 0xffffff,
-    intensity: 0.3,
+    intensity: 0.5,
   };
   /**
    * マテリアル定義のための定数
@@ -65,9 +65,16 @@ class ThreeApp {
    * フォグの定義のための定数
    */
   static FOG_PARAM = {
-    color: 0xdddddd,
+    color: 0x111111,
     near: 5.0,
-    far: 20.0,
+    far: 15.0,
+  };
+  /**
+   * 雲のマテリアル定義のための定数
+   */
+  static CROWD_PARAM = {
+    transparent: true,
+    side: THREE.DoubleSide, // 裏からも見えるようにする
   };
 
   /**
@@ -110,10 +117,14 @@ class ThreeApp {
   plane; // 飛行機
   planeDirection; // 飛行機の進行方向
 
-  //サブカメラのマテイリアル
+  //サブカメラのマテリアル
   planeCamGeometry;
   planeCamDirection;
   planeCamMaterial;
+
+  //雲のマテリアル
+  crowdGeometry;
+  crowdMaterial;
 
   /**
    * コンストラクタ
@@ -162,6 +173,16 @@ class ThreeApp {
         const loader = new THREE.TextureLoader();
         loader.load("./earth.jpg", (texture) => {
           this.earthTexture = texture;
+          resolve();
+        });
+      })
+    );
+    // 雲
+    promises.push(
+      new Promise((resolve) => {
+        const loader = new THREE.TextureLoader();
+        loader.load("./crowd.png", (texture) => {
+          this.crowdTexture = texture;
           resolve();
         });
       })
@@ -263,6 +284,17 @@ class ThreeApp {
     );
     this.scene.add(this.planeCam);
 
+    // 地球のマテリアルとメッシュ
+    this.crowdGeometry = new THREE.SphereGeometry(
+      ThreeApp.EARTH_SCALE * 1.1,
+      32,
+      32
+    );
+    this.crowdMaterial = new THREE.MeshLambertMaterial(ThreeApp.CROWD_PARAM);
+    this.crowdMaterial.map = this.crowdTexture;
+    this.crowd = new THREE.Mesh(this.crowdGeometry, this.crowdMaterial);
+    this.scene.add(this.crowd);
+
     // コントロール
     this.controls = new OrbitControls(
       this.cameraMain,
@@ -290,13 +322,16 @@ class ThreeApp {
     // コントロールを更新
     this.controls.update();
 
+    this.earth.rotation.y += 0.001;
+    this.crowd.rotation.y += 0.003;
+
     // 現在の位置を保持しておく
     const oldPosition = this.plane.position.clone();
     // アニメーション後の新しい位置
     const newPosition = new THREE.Vector3(
       Math.cos(time) * ThreeApp.PLANE_DISTANCE,
       Math.sin(time) * ThreeApp.PLANE_DISTANCE,
-      (Math.sin(time * 3) / 10) * ThreeApp.PLANE_DISTANCE
+      (Math.sin(time * 5) / 10) * ThreeApp.PLANE_DISTANCE
     );
     this.plane.position.copy(newPosition);
 
@@ -342,7 +377,11 @@ class ThreeApp {
     const cameraPosition = backVector.add(this.plane.position);
 
     // カメラの位置と注視点を設定
-    // this.cameraMain.lookAt(this.plane.position);
+    // サブカメラの現在の位置に向かって、原点から伸びるベクトル（を単位化したもの）
+    const cameraUpDirection = cameraPosition.clone().normalize();
+    // サブカメラの上方向を意味するプロパティに上記のベクトルを設定してから lookAt
+    this.cameraSub.up.copy(cameraUpDirection);
+
     this.cameraSub.lookAt(this.plane.position);
     this.cameraSub.position.copy(cameraPosition);
     this.planeCam.position.copy(cameraPosition);
