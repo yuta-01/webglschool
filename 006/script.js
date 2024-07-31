@@ -68,7 +68,7 @@ class App {
   startTime; // レンダリング開始時のタイムスタンプ
   isRendering; // レンダリングを行うかどうかのフラグ
   isRotation; // オブジェクトを Y 軸回転させるかどうか
-  cudeWidth; // cubeの大きさ
+  cubeWidth; // cubeの大きさ
   camera; // WebGLOrbitCamera のインスタンス
 
   constructor() {
@@ -118,11 +118,11 @@ class App {
   }
 
   /**
-   * cudeWidth を設定する
+   * cubeWidth;を設定する
    * @param {number} flag - 設定する値
    */
   setWidth(flag) {
-    this.cudeWidth = flag; // cubeの大きさ
+    this.cubeWidth = flag; // cubeの大きさ
   }
 
   /**
@@ -200,8 +200,8 @@ class App {
   /**
    * 頂点属性（頂点ジオメトリ）のセットアップを行う
    */
-  setupGeometry(row) {
-    row = row || 1.0;
+  setupGeometry() {
+    const row = 1.0;
     // トーラスのジオメトリ情報を取得
     const color = [1.0, 1.0, 1.0, 1.0];
     this.torusGeometry = WebGLGeometry.cube(row, color);
@@ -259,6 +259,8 @@ class App {
     // レンダリングを行っているフラグを立てておく
     this.isRendering = true;
 
+    this.cubeWidth = 1.0;
+
     // レンダリングの開始
     this.render();
   }
@@ -284,17 +286,24 @@ class App {
     // 現在までの経過時間
     const nowTime = (Date.now() - this.startTime) * 0.001;
 
-    this.setupGeometry(this.cudeWidth);
-
     // レンダリングのセットアップ
     this.setupRendering();
 
+    // スケールの係数を設定
+    const scaleMatrix = Mat4.scale(Mat4.identity(), [
+      this.cubeWidth,
+      this.cubeWidth,
+      this.cubeWidth,
+    ]);
+
     // モデル座標変換行列（フラグが立っている場合だけ回転させる）
     const rotateAxis = Vec3.create(0.0, 1.0, 0.0);
-    const m =
+    const rotateMatrix =
       this.isRotation === true
         ? Mat4.rotate(Mat4.identity(), nowTime, rotateAxis)
         : Mat4.identity();
+
+    const m = Mat4.multiply(rotateMatrix, scaleMatrix);
 
     // ビュー・プロジェクション座標変換行列
     const v = this.camera.update();
